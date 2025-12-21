@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Media Materie Bearzi
 // @namespace    https://gesco.bearzi.it/
-// @version      3.7
+// @version      3.8
 // @description  Medie, grafici e andamento voti Bearzi
 // @match        https://gesco.bearzi.it/secure/scuola/famiglie/allievo/28455/valutazioni-tabella
 // @run-at       document-end
@@ -182,13 +182,32 @@ function creaBox(medie, mediaGen) {
             `;
 
             modal.innerHTML = `
-              <div style="background:#fff;padding:20px;border-radius:14px;width:700px">
-                <canvas id="mediaGen"></canvas>
-                <hr>
-                <select id="materiaSel"></select>
-                <canvas id="materiaChart"></canvas>
-                <button id="close">Chiudi</button>
-              </div>`;
+                  <div style="
+                        background:#fff;
+                        padding:20px;
+                        border-radius:14px;
+                        width:700px;
+                        position:relative;
+                    ">
+                    
+                    <!-- ❌ X di chiusura -->
+                    <button id="closeModal" style="
+                        position:absolute;
+                        top:10px;
+                        right:12px;
+                        background:none;
+                        border:none;
+                        font-size:20px;
+                        cursor:pointer;
+                        color:#666;
+                    ">✕</button>
+                
+                    <canvas id="mediaGen"></canvas>
+                    <hr>
+                    <select id="materiaSel" style="margin-bottom:8px;width:100%"></select>
+                    <canvas id="materiaChart"></canvas>
+                  </div>
+                `;
 
             document.body.appendChild(modal);
 
@@ -245,7 +264,13 @@ function creaBox(medie, mediaGen) {
 
             drawMateria(sel.value);
             sel.onchange = () => drawMateria(sel.value);
-            modal.querySelector("#close").onclick = () => modal.remove();
+            // chiusura modal
+            modal.querySelector("#closeModal").onclick = () => modal.remove();
+            
+            // chiudi cliccando sullo sfondo
+            modal.onclick = e => {
+                if (e.target === modal) modal.remove();
+            };
         });
     }
 
@@ -273,6 +298,7 @@ function creaBox(medie, mediaGen) {
         if (avvia() || ++t > 15) clearInterval(timer);
     }, 500);
 })();
+
 
 
 
