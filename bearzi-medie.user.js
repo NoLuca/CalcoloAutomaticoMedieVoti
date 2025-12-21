@@ -7,6 +7,7 @@
 // @run-at       document-end
 // @grant        none
 //
+// @connect      raw.githubusercontent.com
 // @downloadURL  https://raw.githubusercontent.com/NoLuca/CalcoloAutomaticoMedieVoti/main/bearzi-medie.user.js
 // @updateURL    https://raw.githubusercontent.com/NoLuca/CalcoloAutomaticoMedieVoti/main/bearzi-medie.user.js
 // ==/UserScript==
@@ -272,5 +273,6 @@ function creaBox(medie, mediaGen) {
         if (avvia() || ++t > 15) clearInterval(timer);
     }, 500);
 })();
+
 
 
