@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Media Materie Bearzi
 // @namespace    https://gesco.bearzi.it/
-// @version      3.6
+// @version      3.7
 // @description  Medie, grafici e andamento voti Bearzi
 // @match        https://gesco.bearzi.it/secure/scuola/famiglie/allievo/28455/valutazioni-tabella
 // @run-at       document-end
@@ -56,7 +56,7 @@
 }
 
 
-    function creaBox(medie, mediaGen) {
+function creaBox(medie, mediaGen) {
     let html = `
     <div style="display:flex;justify-content:space-between;align-items:center">
         <b>📊 Medie</b>
@@ -88,6 +88,8 @@
     <button id="graficiBtn" style="width:100%;margin-top:8px">📈 Grafici</button>`;
 
     let box = document.getElementById("bearzi-box");
+    const isNew = !box;
+
     if (!box) {
         box = document.createElement("div");
         box.id = "bearzi-box";
@@ -103,16 +105,33 @@
             z-index: 99999;
             font-family: system-ui;
             box-shadow: 0 10px 30px rgba(0,0,0,.4);
+
+            transform: scale(0.85);
+            opacity: 0;
+            transition: transform .35s ease, opacity .35s ease;
         `;
         document.body.appendChild(box);
     }
 
     box.innerHTML = html;
 
-    // 🔴 chiudi box
+    // 🎬 animazione di apertura
+    if (isNew || box.style.display === "none") {
+        box.style.display = "block";
+        requestAnimationFrame(() => {
+            box.style.transform = "scale(1)";
+            box.style.opacity = "1";
+        });
+    }
+
+    // 🔴 chiudi box (animato)
     box.querySelector("#closeBox").onclick = () => {
-        box.style.display = "none";
-        document.getElementById("openBearziBox").style.display = "block";
+        box.style.transform = "scale(0.85)";
+        box.style.opacity = "0";
+        setTimeout(() => {
+            box.style.display = "none";
+            document.getElementById("openBearziBox").style.display = "block";
+        }, 300);
     };
 
     // 👁️ bottone riapertura
@@ -134,14 +153,22 @@
             z-index: 99998;
             display: none;
             box-shadow: 0 4px 12px rgba(0,0,0,.3);
+            transition: transform .25s ease;
         `;
+        openBtn.onmouseenter = () => openBtn.style.transform = "scale(1.05)";
+        openBtn.onmouseleave = () => openBtn.style.transform = "scale(1)";
         openBtn.onclick = () => {
-            box.style.display = "block";
             openBtn.style.display = "none";
+            box.style.display = "block";
+            requestAnimationFrame(() => {
+                box.style.transform = "scale(1)";
+                box.style.opacity = "1";
+            });
         };
         document.body.appendChild(openBtn);
     }
 }
+
 
     function mostraGrafici(dati, timeline) {
         loadChartJS(() => {
@@ -245,4 +272,5 @@
         if (avvia() || ++t > 15) clearInterval(timer);
     }, 500);
 })();
+
 
