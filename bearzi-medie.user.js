@@ -1,11 +1,14 @@
 // ==UserScript==
 // @name         Media Materie Bearzi
 // @namespace    https://gesco.bearzi.it/
-// @version      3.5
+// @version      3.6
 // @description  Medie, grafici e andamento voti Bearzi
 // @match        https://gesco.bearzi.it/secure/scuola/famiglie/allievo/28455/valutazioni-tabella
 // @run-at       document-end
 // @grant        none
+//
+// @downloadURL  https://raw.githubusercontent.com/NoLuca/CalcoloAutomaticoMedieVoti/main/bearzi-medie.user.js
+// @updateURL    https://raw.githubusercontent.com/NoLuca/CalcoloAutomaticoMedieVoti/main/bearzi-medie.user.js
 // ==/UserScript==
 
 (function () {
@@ -26,69 +29,119 @@
     }
 
     function estraiVoti() {
-        const celle = document.querySelectorAll("td[data-valutazione][data-peso]");
-        const perMateria = {};
-        const timeline = [];
+    // ⚠️ Array vero, così possiamo invertirlo
+    const celle = Array.from(
+        document.querySelectorAll("td[data-valutazione][data-peso]")
+    ).reverse(); // ⬅️ QUI l’inversione temporale
 
-        celle.forEach((td, i) => {
-            const voto = parseFloat(td.dataset.valutazione);
-            const peso = parseFloat(td.dataset.peso);
-            if (isNaN(voto) || isNaN(peso)) return;
+    const perMateria = {};
+    const timeline = [];
 
-            const riga = td.closest("tr");
-            const materia = riga?.querySelector("td.align-middle, td")?.innerText.trim();
-            if (!materia) return;
+    celle.forEach((td, i) => {
+        const voto = parseFloat(td.dataset.valutazione);
+        const peso = parseFloat(td.dataset.peso);
+        if (isNaN(voto) || isNaN(peso)) return;
 
-            if (!perMateria[materia]) perMateria[materia] = [];
-            perMateria[materia].push(voto);
+        const riga = td.closest("tr");
+        const materia = riga?.querySelector("td.align-middle, td")?.innerText.trim();
+        if (!materia) return;
 
-            timeline.push({ voto, peso, index: i + 1 });
-        });
+        if (!perMateria[materia]) perMateria[materia] = [];
+        perMateria[materia].push(voto);
 
-        return { perMateria, timeline };
-    }
+        timeline.push({ voto, peso, index: i + 1 });
+    });
+
+    return { perMateria, timeline };
+}
+
 
     function creaBox(medie, mediaGen) {
-        let html = `<b>📊 Medie</b><table style="width:100%;margin-top:6px">`;
+    let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+        <b>📊 Medie</b>
+        <button id="closeBox" style="
+            background:none;
+            border:none;
+            color:#aaa;
+            font-size:18px;
+            cursor:pointer
+        ">✕</button>
+    </div>
 
-        for (const m in medie) {
-            html += `
-            <tr>
-              <td>${m}</td>
-              <td style="text-align:right;color:${votoColor(medie[m])}">
-                <b>${medie[m].toFixed(2)}</b>
-              </td>
-            </tr>`;
-        }
+    <table style="width:100%;margin-top:6px">`;
 
-        html += `</table><hr>
-        <div style="text-align:center;font-size:16px;color:${votoColor(mediaGen)}">
-          Media generale: <b>${mediaGen.toFixed(2)}</b>
-        </div>
-        <button id="graficiBtn" style="width:100%;margin-top:8px">📈 Grafici</button>`;
-
-        let box = document.getElementById("bearzi-box");
-        if (!box) {
-            box = document.createElement("div");
-            box.id = "bearzi-box";
-            box.style = `
-                position: fixed;
-                top: 80px;
-                right: 15px;
-                width: 320px;
-                background: #1e1e1e;
-                color: #fff;
-                padding: 12px;
-                border-radius: 12px;
-                z-index: 99999;
-                font-family: system-ui;
-                box-shadow: 0 10px 30px rgba(0,0,0,.4);
-            `;
-            document.body.appendChild(box);
-        }
-
-        box.innerHTML = html;
+    for (const m in medie) {
+        html += `
+        <tr>
+          <td>${m}</td>
+          <td style="text-align:right;color:${votoColor(medie[m])}">
+            <b>${medie[m].toFixed(2)}</b>
+          </td>
+        </tr>`;
     }
+
+    html += `</table><hr>
+    <div style="text-align:center;font-size:16px;color:${votoColor(mediaGen)}">
+      Media generale: <b>${mediaGen.toFixed(2)}</b>
+    </div>
+    <button id="graficiBtn" style="width:100%;margin-top:8px">📈 Grafici</button>`;
+
+    let box = document.getElementById("bearzi-box");
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "bearzi-box";
+        box.style = `
+            position: fixed;
+            top: 80px;
+            right: 15px;
+            width: 320px;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            z-index: 99999;
+            font-family: system-ui;
+            box-shadow: 0 10px 30px rgba(0,0,0,.4);
+        `;
+        document.body.appendChild(box);
+    }
+
+    box.innerHTML = html;
+
+    // 🔴 chiudi box
+    box.querySelector("#closeBox").onclick = () => {
+        box.style.display = "none";
+        document.getElementById("openBearziBox").style.display = "block";
+    };
+
+    // 👁️ bottone riapertura
+    let openBtn = document.getElementById("openBearziBox");
+    if (!openBtn) {
+        openBtn = document.createElement("button");
+        openBtn.id = "openBearziBox";
+        openBtn.textContent = "📊 Medie";
+        openBtn.style = `
+            position: fixed;
+            top: 80px;
+            right: 15px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 99998;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,.3);
+        `;
+        openBtn.onclick = () => {
+            box.style.display = "block";
+            openBtn.style.display = "none";
+        };
+        document.body.appendChild(openBtn);
+    }
+}
 
     function mostraGrafici(dati, timeline) {
         loadChartJS(() => {
@@ -192,3 +245,4 @@
         if (avvia() || ++t > 15) clearInterval(timer);
     }, 500);
 })();
+
