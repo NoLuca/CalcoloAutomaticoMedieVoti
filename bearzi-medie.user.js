@@ -58,6 +58,12 @@
 
 
 function creaBox(medie, mediaGen) {
+
+    // --- calcolo buche ---
+    const buche = Object.entries(medie)
+        .filter(([_, v]) => v < 5.5)
+        .sort((a, b) => a[1] - b[1]); // dalla peggiore
+
     let html = `
     <div style="display:flex;justify-content:space-between;align-items:center">
         <b>📊 Medie</b>
@@ -82,11 +88,30 @@ function creaBox(medie, mediaGen) {
         </tr>`;
     }
 
-    html += `</table><hr>
+    html += `</table><hr>`;
+
+    // --- sezione buche ---
+    if (buche.length > 0) {
+        html += `
+        <div style="margin-bottom:6px">
+            <div style="font-size:15px;color:#e74c3c">
+                ⚠ Buche: <b>${buche.length}</b>
+            </div>
+            <div style="font-size:13px;color:#ddd">
+                ${buche.map(([m, v]) => `${m} (${v.toFixed(2)})`).join(", ")}
+            </div>
+        </div>
+        <hr>`;
+    }
+
+    html += `
     <div style="text-align:center;font-size:16px;color:${votoColor(mediaGen)}">
       Media generale: <b>${mediaGen.toFixed(2)}</b>
     </div>
-    <button id="graficiBtn" style="width:100%;margin-top:8px">📈 Grafici</button>`;
+
+    <button id="graficiBtn" style="width:100%;margin-top:8px">
+        📈 Grafici
+    </button>`;
 
     let box = document.getElementById("bearzi-box");
     const isNew = !box;
@@ -106,7 +131,6 @@ function creaBox(medie, mediaGen) {
             z-index: 99999;
             font-family: system-ui;
             box-shadow: 0 10px 30px rgba(0,0,0,.4);
-
             transform: scale(0.85);
             opacity: 0;
             transition: transform .35s ease, opacity .35s ease;
@@ -116,7 +140,6 @@ function creaBox(medie, mediaGen) {
 
     box.innerHTML = html;
 
-    // 🎬 animazione di apertura
     if (isNew || box.style.display === "none") {
         box.style.display = "block";
         requestAnimationFrame(() => {
@@ -125,7 +148,6 @@ function creaBox(medie, mediaGen) {
         });
     }
 
-    // 🔴 chiudi box (animato)
     box.querySelector("#closeBox").onclick = () => {
         box.style.transform = "scale(0.85)";
         box.style.opacity = "0";
@@ -135,7 +157,6 @@ function creaBox(medie, mediaGen) {
         }, 300);
     };
 
-    // 👁️ bottone riapertura
     let openBtn = document.getElementById("openBearziBox");
     if (!openBtn) {
         openBtn = document.createElement("button");
@@ -169,6 +190,7 @@ function creaBox(medie, mediaGen) {
         document.body.appendChild(openBtn);
     }
 }
+
 
 
     function mostraGrafici(dati, timeline) {
