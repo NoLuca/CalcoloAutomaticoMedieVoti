@@ -52,6 +52,21 @@
         return "#2ecc71";
     }
 
+    function trendMateria(materia) {
+        if (!lastPerMateria || !lastPerMateria[materia]) return '';
+        const voti = lastPerMateria[materia];
+        if (voti.length < 2) return '';
+
+        const last = voti[voti.length - 1];
+        const prev = voti[voti.length - 2];
+
+        if (last > prev)
+            return '<span style="color:#2ecc71;margin-left:6px">▲</span>';
+        if (last < prev)
+            return '<span style="color:#e74c3c;margin-left:6px">▼</span>';
+        return '';
+    }
+
     function mostraToastOrdinamento() {
         const box = document.getElementById("bearzi-box");
         if (!box) return;
@@ -165,9 +180,10 @@
         <table style="width:100%;margin-top:6px">`;
 
         ordered.forEach(([m, v]) => {
+            const trend = trendMateria(m);
             html += `
             <tr>
-              <td>${m}</td>
+              <td>${m}${trend}</td>
               <td style="text-align:right;color:${votoColor(v)}">
                 <b>${v.toFixed(2)}</b>
               </td>
