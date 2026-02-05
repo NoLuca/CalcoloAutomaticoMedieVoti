@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Media Materie Bearzi
 // @namespace    https://gesco.bearzi.it/
-// @version      3.11
+// @version      3.12
 // @description  Medie, grafici e andamento voti Bearzi
 // @match        https://gesco.bearzi.it/secure/scuola/famiglie/allievo/28455/valutazioni-tabella
 // @run-at       document-end
@@ -57,8 +57,8 @@
         const voti = lastPerMateria[materia];
         if (voti.length < 2) return '';
 
-        const last = voti[voti.length - 1];
-        const prev = voti[voti.length - 2];
+        const last = voti[voti.length - 1].voto;
+        const prev = voti[voti.length - 2].voto;
 
         if (last > prev)
             return '<span style="color:#2ecc71;margin-left:6px">▲</span>';
@@ -123,7 +123,7 @@
             if (!materia) return;
 
             if (!perMateria[materia]) perMateria[materia] = [];
-            perMateria[materia].push(voto);
+            perMateria[materia].push({ voto, peso });
 
             timeline.push({ voto, peso, index: i + 1 });
         });
@@ -379,18 +379,28 @@
             let chart;
             function drawMateria(m) {
                 if (chart) chart.destroy();
+
+                const voti = dati[m].map(x => x.voto);
+
                 chart = new Chart(document.getElementById("materiaChart"), {
                     type: "line",
                     data: {
-                        labels: dati[m].map((_, i) => i + 1),
+                        labels: voti.map((_, i) => i + 1),
                         datasets: [{
                             label: m,
-                            data: dati[m],
-                            borderColor: votoColor(
-                                dati[m].reduce((a, b) => a + b, 0) / dati[m].length
-                            ),
+                            data: voti,
                             tension: 0.4,
-                            pointBackgroundColor: dati[m].map(votoColor)
+
+                            // colore linea per segmento
+                            segment: {
+                                borderColor: ctx => {
+                                    const v = ctx.p0.parsed.y;
+                                    return votoColor(v);
+                                }
+                            },
+
+                            // colore punti
+                            pointBackgroundColor: voti.map(v => votoColor(v))
                         }]
                     }
                 });
@@ -414,8 +424,17 @@
         lastTimeline = timeline;
 
         const medie = {};
-        for (const m in perMateria)
-            medie[m] = perMateria[m].reduce((a, b) => a + b, 0) / perMateria[m].length;
+
+        for (const m in perMateria) {
+            const sumVP = perMateria[m]
+            .reduce((s, x) => s + x.voto * x.peso, 0);
+
+            const sumP = perMateria[m]
+            .reduce((s, x) => s + x.peso, 0);
+
+            medie[m] = sumVP / sumP;
+        }
+
 
         const mediaGen =
             timeline.reduce((s, x) => s + x.voto * x.peso, 0) /
