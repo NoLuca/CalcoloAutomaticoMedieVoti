@@ -3,7 +3,7 @@
 // @namespace    https://gesco.bearzi.it/
 // @version      3.12
 // @description  Medie, grafici e andamento voti Bearzi
-// @match        https://gesco.bearzi.it/secure/scuola/famiglie/allievo/28455/valutazioni-tabella
+// @match        https://gesco.bearzi.it/secure/scuola/famiglie/allievo/*/valutazioni-tabella
 // @run-at       document-end
 // @grant        none
 //
@@ -452,4 +452,5 @@
         if (avvia() || ++t > 15) clearInterval(timer);
     }, 500);
 })();
+
 
